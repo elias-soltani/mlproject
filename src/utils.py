@@ -55,3 +55,12 @@ def evaluate_model(X_train,y_train, X_test, y_test, models, params):
         logging.info(e)
         raise CustomException(e, sys) from e
     
+
+def load_object(file_path):
+    try:
+        with open(file_path, 'rb') as f:
+            return dill.load(f)
+    except Exception as e:
+        logging.error(e)
+        raise CustomException(e, sys) from e
+    
