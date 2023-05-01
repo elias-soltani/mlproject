@@ -17,7 +17,6 @@ from xgboost import XGBRegressor
 
 from sklearn.metrics import r2_score
 
-
 from src.exception import CustomException
 from src.logger import logging
 
@@ -47,12 +46,38 @@ class ModelTrainer:
                 "Linear Regression": LinearRegression(),
                 "K-Neighbors Regressor": KNeighborsRegressor(),
                 "XGBRegressor": XGBRegressor(),
-                "Catboosting Regressor": CatBoostRegressor(verbose=False),
+                "CatBoosting Regressor": CatBoostRegressor(verbose=False),
                 "AdaBoost Regressor": AdaBoostRegressor()
             }
 
-            model_report:dict = evaluate_model(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, models=models)
+            params = {
+                "Decision Tree": {
+                    'criterion': ['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
+                },
+                "Random Forest": {'n_estimators':[8,16,32,64,128,256]},
+                "Gradient Boosting": {
+                    'n_estimators':[8,16,32,64,128,256],
+                    'learning_rate': [0.1, 0.01, 0.05, 0.001],
+                    'subsample': [0.6,0.7,0.75,0.8,0.85,0.9],
+                    },
+                "Linear Regression": {},
+                "K-Neighbors Regressor": {'n_neighbors':[5,7,9,11]},
+                "XGBRegressor": {
+                    'learning_rate':[0.1,0.01,0.05,0.001],
+                    'n_estimators':[8,16,32,64,128,256],
+                },
+                "CatBoosting Regressor": {
+                    'depth': [6,8,10],
+                    'learning_rate' : [0.01, 0.05, 0.1],
+                    'iterations': [30, 50, 100],
+                },
+                "AdaBoost Regressor": {
+                    'learning_rate':[0.1,0.01,0.05,0.001],
+                    'n_estimators':[8,16,32,64,128,256],}
+            }
 
+            model_report:dict = evaluate_model(X_train=X_train, y_train=y_train, X_test=X_test,
+                                                y_test=y_test, models=models, params=params)
             # get the best model
             best_model_name = ""
             max_score = -np.inf
@@ -70,12 +95,9 @@ class ModelTrainer:
             logging.info("Best model found on both training and testing dataset")
 
             save_obj(self.model_trainer_config.trainer_model_file_path, best_model)
-
             prediction = best_model.predict(X_test)
-
             r2_square = r2_score(y_test, prediction)
             return r2_square
-
 
         except Exception as e:
             loggin.info(e)
